@@ -22,14 +22,17 @@ const urls=[
   "https://jobs.lever.co/pelmorex/49c9fa75-f39b-4f39-8b96-88560988ac5e",
   "https://jobs.lever.co/tokenmetrics/24e473dc-1594-46d2-b3f8-03e03b004e3d",
   "https://jobs.lever.co/90seconds/fb1d48fa-f1c7-4a0e-a35b-471ba62dbf85",
-  "https://jobs.eu.lever.co/quadcode/4b3a9532-8f64-47c7-9d4b-bfca2dcc9de1/apply",
+  "https://jobs.eu.lever.co/quadcode/4b3a9532-8f64-47c7-9d4b-bfca2dcc9de1",
 ]
 
 function App() {
   const [url, setUrl] = useState<string>(urls[0]);
+  const [salary, setSalary] = useState<string>('Yet to be scraped');
+  const [title, setTitle] = useState<string>('Yet to be scraped');
+  const [experience, setExperience] = useState<string>('Yet to be scraped');
   const [showWebView,setShowWebView]=useState(false)
-  const [techStackText, setTechStackText] = useState<string>('');
-  const [contentText, setContentText] = useState<string>('');
+  const [techStackText, setTechStackText] = useState<string>('Yet to be scraped');
+  const [contentText, setContentText] = useState<string>('Yet to be scraped');
 
   const webviewRef = useRef<Electron.WebviewTag>(null);
 
@@ -39,6 +42,41 @@ function App() {
   const handleShowWebView=()=>{
     setShowWebView(!showWebView)
   }
+  const getCompanyFromUrl=(url:string)=>{
+    return url.replace("https://","").split("/")[1]
+  }
+  useEffect(()=>{
+    setContentText('Yet to be scraped')
+  },[url])
+
+  const infoContainerInfo=[
+    {
+      name:'Salary',
+      value:salary,
+      anchor:false
+    },
+    {
+      name:'Company',
+      value:getCompanyFromUrl(url),
+      anchor:false
+    },
+    {
+      name:'Title',
+      value:title,
+      anchor:false
+    },
+    {
+      name:'Url',
+      value:url,
+      anchor:true
+    },
+    {
+      name:'Years of Experience',
+      value:experience,
+      anchor:false
+    },
+  ]
+
   const scrapeInfo = () => {
     if (webviewRef.current) {
         webviewRef.current.executeJavaScript(`
@@ -67,9 +105,9 @@ function App() {
   return (
     <>
     <div className='flex w-screen'>
-      <UrlList handleSetUrl={handleSetUrl} urls={urls} handleScrape={scrapeInfo} handleView={handleShowWebView}/>
+      <UrlList handleSetUrl={handleSetUrl} selectedUrl={url} urls={urls} handleScrape={scrapeInfo} handleView={handleShowWebView}/>
       <div className='min-w-0 flex-1 flex flex-col gap-3 px-2'>
-        <JobInfoContainer salary={""} company='' title=''/>
+        <JobInfoContainer items={infoContainerInfo}  />
         <TechStackDiv text={techStackText}/>
         <ContentDiv text={contentText}/>
       </div>
