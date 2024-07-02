@@ -6,7 +6,7 @@ interface IProps{
 
 export default function TechStackDiv({text}:IProps){
     return(
-    <div className="px-4 min-w-[300px]">
+    <div className="px-4 min-w-[250px]">
         <div className='flex justify-start items-center'>
           <h2 className='bg-slate-950 w-full text-white px-2 py-1 rounded-t-lg'>TechStack</h2>
         </div>

@@ -16,7 +16,7 @@ export default function JobInfoContainer({items}:IProps){
 
 const InfoContainer=({header,text,anchor}:{header:string,text:string,anchor:boolean})=>{
     return(
-    <div className="w-1/2 min-w-[300px] px-4 mb-4">
+    <div className="w-1/2 min-w-[250px] px-4 mb-4">
         <div className='flex justify-start items-center'>
           <h2 className='bg-slate-950 w-full text-white px-2 py-1 rounded-t-lg'>{header}</h2>
         </div>

@@ -9,6 +9,7 @@ import UrlList from './components/UrlList';
 import JobInfoContainer from './components/JobInfoContainer';
 import TechStackDiv from './components/TechStackDiv';
 import ContentDiv from './components/ContentDiv';
+import ModalBackdrop from './components/ModalBackdrop';
 
 const headerDiv=`<div class="posting-headline">`
 const startingDiAttr=`[data-qa="job-description"]`
@@ -113,7 +114,7 @@ function App() {
       </div>
     </div>
     {showWebView && 
-    <div onClick={handleShowWebView} className='h-screen w-screen absolute bg-slate-600/50 z-10 top-0 left-0'/>
+    <ModalBackdrop handleShowWebView={handleShowWebView}/>
     }
     <webview ref={webviewRef} id="foo" src={url} className={`${showWebView?"visible":"invisible"} z-20 webview-class fixed top-[60px] left-[50%] -translate-x-[50%] border-black border-2`}></webview>
     </>
