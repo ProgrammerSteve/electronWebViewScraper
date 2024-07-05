@@ -1,6 +1,7 @@
 //@ts-ignore
-const {setWindowTitle}=window["ipcAPI"];
+const {setWindowTitle,runChatGPT}=window["ipcAPI"];
 
 export {
-    setWindowTitle
+    setWindowTitle,
+    runChatGPT
 }

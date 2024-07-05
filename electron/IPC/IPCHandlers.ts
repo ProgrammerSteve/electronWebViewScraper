@@ -1,14 +1,21 @@
-import {BrowserWindow,app, ipcMain, IpcMainEvent} from "electron";
+import {BrowserWindow,app, ipcMain, IpcMainEvent,IpcMainInvokeEvent} from "electron";
 
-// import pie from "puppeteer-in-electron"
-// import puppeteer from 'puppeteer-core';
+import type { JobDetails } from "../../src/App.js";
+import OpenAI from 'openai'
+import dotenv from 'dotenv'
 
-// type Puppeteer= typeof import("c:/Users/Steven/Desktop/Practice/electronVite/electronVitePractice/node_modules/puppeteer-core/lib/types")
+dotenv.config()
+export const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+
 
 import { IPC_ACTIONS } from "./IPCActions.js";
 
 const {
     SET_WINDOW_TITLE,
+    RUN_CHATGPT
     // SCRAPE_URL
 }=IPC_ACTIONS.Window;
 
@@ -18,62 +25,107 @@ const handleSetWindowTitle=(event:IpcMainEvent,title:string)=>{
     window?.setTitle(title);
 }
 
-// const handleScrapeWebsite=async(event:IpcMainEvent,url:string)=>{
-//     try {
-//         await pie.initialize(app);
-//         const browser = await pie.connect(app, ((puppeteer as unknown) as Puppeteer));
-       
-//         const window = new BrowserWindow();
-//         //const url = "https://jobs.lever.co/firmex/abe41797-613b-4471-bc97-c61bef58b30e";
-//         await window.loadURL(url);
-       
-//         const page = await pie.getPage(browser, window);
+const handleRunChatGPT = async (event: IpcMainEvent, ...args: any[]) => {
+    const [paragraph] = args;
+    try {
+      const jobDetails = await extractJobDetails(paragraph);
+      return jobDetails
+    } catch (error) {
+      console.log('Error handling ChatGPT request:', error);
+      return {
+        salary: 'not found',
+        experience: 'not found',
+        techStack: []
+      }
+    }
+  };
+  
 
-//         await page.goto(url);
 
-//         const result = await page.evaluate(() => {
-//             const jobDescriptionDiv = document.querySelector('[data-qa="job-description"]');
-//             const closingDescriptionDiv = document.querySelector('[data-qa="closing-description"]');
-//             if (jobDescriptionDiv && closingDescriptionDiv) {
-//                 let currentNode = jobDescriptionDiv.nextElementSibling;
-//                 let textContent = '';
-
-//                 while (currentNode && currentNode !== closingDescriptionDiv) {
-//                     textContent += currentNode.textContent || '';
-//                     currentNode = currentNode.nextElementSibling;
-//                 }
-
-//                 return textContent;
-//             }
-//             return '';
-//         });
-
-//         window.destroy();
-//         await browser.close();
-//         event.sender.send(SCRAPE_URL, result);
-//         //event.returnValue = result; // Send the result back to the renderer
-//     } catch (error) {
-//         console.error('Scraping error:', error);
-//         //event.returnValue = 'Error occurred during scraping';
-//         event.sender.send(SCRAPE_URL, 'Error occurred during scraping');
-//     }
-// }
-
-const ipcHandlers=[
+const ipcOneWayHandlers=[
     {
         event:SET_WINDOW_TITLE,
         callback:handleSetWindowTitle
     },
-    // {
-    //     event:SCRAPE_URL,
-    //     callback:()=>handleScrapeWebsite
-    // }
+
+]
+const ipcTwoWayHandlers=[
+  {
+    event: RUN_CHATGPT,
+    callback: handleRunChatGPT
+  }
 ]
 
 
 
-export const registerIPCHandlers=()=>{
-    ipcHandlers.forEach((handler:{event:string,callback:any})=>{
+export const registerOneWayIPCHandlers=()=>{
+  ipcOneWayHandlers.forEach((handler:{event:string,callback:any})=>{
         ipcMain.on(handler.event,handler.callback)
     })
 }
+export const registerTwoWayIPCHandlers=()=>{
+  ipcTwoWayHandlers.forEach((handler:{event:string,callback:any})=>{
+        ipcMain.handle(handler.event,handler.callback)
+    })
+}
+
+
+
+
+
+
+
+export async function extractJobDetails(paragraph: string): Promise<JobDetails> {
+    // Define the prompt
+    const prompt = `
+      Extract the following information from the job description paragraph:
+      1. Salary range
+      2. Experience requirements
+      3. Array of strings for the tech stack
+  
+      If the information is not found, use the following default values:
+      {
+        salary: "not found",
+        experience: "not found",
+        techStack: []
+      }
+  
+      Return the information in the following JSON format:
+      {
+        salary: "salary range",
+        experience: "experience requirements",
+        techStack: ["tech1", "tech2", "tech3"]
+      }
+
+      Only return the JSON
+  
+      Job description paragraph:
+      "${paragraph}"
+    `;
+  
+    // Send the prompt to the OpenAI API
+    const response = await openai.completions.create({
+      model: 'gpt-4.0-turbo',
+      prompt: prompt,
+      max_tokens: 200,
+      temperature: 0,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+    });
+  
+    // Parse the response
+    const text = response.choices[0]?.text.trim();
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch (error) {
+      result = {
+        salary: "not found",
+        experience: "not found",
+        techStack: []
+      };
+    }
+  
+    return result;
+  }
