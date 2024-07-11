@@ -1,9 +1,8 @@
-import { app, BrowserWindow, ipcMain, IpcMainEvent, IpcMainInvokeEvent } from 'electron'
+import { app, BrowserWindow } from 'electron'
 //import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { registerOneWayIPCHandlers,registerTwoWayIPCHandlers } from './IPC/IPCHandlers.js'
-
 
 
 //const require = createRequire(import.meta.url)
@@ -74,25 +73,3 @@ app.whenReady().then(()=>{
   registerTwoWayIPCHandlers();
   createWindow();
 })
-
-
-
-
-
-
-
-// ipcMain.handle('run-chatgpt', async (event: IpcMainInvokeEvent, paragraph: string): Promise<JobDetails> => {
-//   try {
-//     const jobDetails = await extractJobDetails(paragraph);
-//     return jobDetails;
-//   } catch (error) {
-//     console.error('Error handling ChatGPT request:', error);
-//     return {
-//       salary: 'not found',
-//       experience: 'not found',
-//       techStack: []
-//     };
-//   }
-// });
-
-

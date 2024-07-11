@@ -23,5 +23,11 @@ declare namespace NodeJS {
 
 // Used in Renderer process, expose in `preload.ts`
 interface Window {
-  ipcRenderer: import('electron').IpcRenderer
+  ipcRenderer: import('electron').IpcRenderer;
+  ipcAPI:IpcAPI;
+}
+
+interface IpcAPI{
+  setWindowTitle:(title:string)=>void;
+  searchForKeywords: (paragraph: string) => string[];
 }

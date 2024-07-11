@@ -3,7 +3,7 @@ import { IPC_ACTIONS } from './IPC/IPCActions'
 
 const {
   SET_WINDOW_TITLE,
-  RUN_CHATGPT
+  SEARCH_FOR_KEYWORDS
 }=IPC_ACTIONS.Window
 
 
@@ -32,5 +32,7 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 
 contextBridge.exposeInMainWorld("ipcAPI",{
   setWindowTitle:(title:string)=>ipcRenderer.send(SET_WINDOW_TITLE,title),
-  runChatGPT: (paragraph:string) => ipcRenderer.invoke(RUN_CHATGPT,paragraph),
+  searchForKeywords: (paragraph: string) => ipcRenderer.invoke(SEARCH_FOR_KEYWORDS,paragraph),
+  // runChatGPT: (paragraph:string) => ipcRenderer.invoke(RUN_CHATGPT,paragraph),
+  // scrapeUrls: ()=>ipcRenderer.invoke(SCRAPE_URL)
 })

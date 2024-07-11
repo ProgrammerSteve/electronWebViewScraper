@@ -1,22 +1,17 @@
-import {BrowserWindow,app, ipcMain, IpcMainEvent,IpcMainInvokeEvent} from "electron";
-
-import type { JobDetails } from "../../src/App.js";
-import OpenAI from 'openai'
-import dotenv from 'dotenv'
-
-dotenv.config()
-export const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-
-
+import {BrowserWindow, ipcMain, IpcMainEvent} from "electron";
 import { IPC_ACTIONS } from "./IPCActions.js";
+import { ac } from "../utility/wordSearch.js";
+
+type AnyRest=any[]
+
+type handlerObj={
+  event:string,
+  callback: (event: IpcMainEvent, ...rest: AnyRest)=>any
+}
 
 const {
     SET_WINDOW_TITLE,
-    RUN_CHATGPT
-    // SCRAPE_URL
+    SEARCH_FOR_KEYWORDS
 }=IPC_ACTIONS.Window;
 
 const handleSetWindowTitle=(event:IpcMainEvent,title:string)=>{
@@ -25,38 +20,24 @@ const handleSetWindowTitle=(event:IpcMainEvent,title:string)=>{
     window?.setTitle(title);
 }
 
-const handleRunChatGPT = async (event: IpcMainEvent, ...args: any[]) => {
-    const [paragraph] = args;
-    try {
-      const jobDetails = await extractJobDetails(paragraph);
-      return jobDetails
-    } catch (error) {
-      console.log('Error handling ChatGPT request:', error);
-      return {
-        salary: 'not found',
-        experience: 'not found',
-        techStack: []
-      }
-    }
-  };
-  
+const handleSearchForKeywords=(event:IpcMainEvent,paragraph:string)=>{
+  let lowercaseParagraph=paragraph.toLowerCase()
+  const matches=ac.search(lowercaseParagraph)
+  return matches
+}
 
-
-const ipcOneWayHandlers=[
+const ipcOneWayHandlers:handlerObj[]=[
     {
         event:SET_WINDOW_TITLE,
         callback:handleSetWindowTitle
     },
-
 ]
-const ipcTwoWayHandlers=[
+const ipcTwoWayHandlers:handlerObj[]=[
   {
-    event: RUN_CHATGPT,
-    callback: handleRunChatGPT
-  }
+    event:SEARCH_FOR_KEYWORDS,
+    callback:handleSearchForKeywords
+},
 ]
-
-
 
 export const registerOneWayIPCHandlers=()=>{
   ipcOneWayHandlers.forEach((handler:{event:string,callback:any})=>{
@@ -69,63 +50,3 @@ export const registerTwoWayIPCHandlers=()=>{
     })
 }
 
-
-
-
-
-
-
-export async function extractJobDetails(paragraph: string): Promise<JobDetails> {
-    // Define the prompt
-    const prompt = `
-      Extract the following information from the job description paragraph:
-      1. Salary range
-      2. Experience requirements
-      3. Array of strings for the tech stack
-  
-      If the information is not found, use the following default values:
-      {
-        salary: "not found",
-        experience: "not found",
-        techStack: []
-      }
-  
-      Return the information in the following JSON format:
-      {
-        salary: "salary range",
-        experience: "experience requirements",
-        techStack: ["tech1", "tech2", "tech3"]
-      }
-
-      Only return the JSON
-  
-      Job description paragraph:
-      "${paragraph}"
-    `;
-  
-    // Send the prompt to the OpenAI API
-    const response = await openai.completions.create({
-      model: 'gpt-4.0-turbo',
-      prompt: prompt,
-      max_tokens: 200,
-      temperature: 0,
-      top_p: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0,
-    });
-  
-    // Parse the response
-    const text = response.choices[0]?.text.trim();
-    let result;
-    try {
-      result = JSON.parse(text);
-    } catch (error) {
-      result = {
-        salary: "not found",
-        experience: "not found",
-        techStack: []
-      };
-    }
-  
-    return result;
-  }

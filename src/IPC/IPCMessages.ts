@@ -1,7 +1,7 @@
-//@ts-ignore
-const {setWindowTitle,runChatGPT}=window["ipcAPI"];
+
+const {setWindowTitle,searchForKeywords}=window["ipcAPI"];
 
 export {
     setWindowTitle,
-    runChatGPT
+    searchForKeywords
 }

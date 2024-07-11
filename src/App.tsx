@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
  
-import { setWindowTitle,runChatGPT } from './IPC/IPCMessages';
+import { searchForKeywords, setWindowTitle } from './IPC/IPCMessages';
 
 import './App.scss'
 import UrlList from './components/UrlList';
@@ -15,10 +15,6 @@ export type JobDetails={
   experience: string,
   techStack: string[]
 }
-
-
-
-
     
 function scrapeLeverContent(){
   const jobDescriptionDiv = document.querySelector('[data-qa="job-description"]');
@@ -87,10 +83,6 @@ function scrapeLeverSalary(){
       return('Salary range not found');
   }
 }
-async function testGPTScrape(paragraph:string){
-  const res=await runChatGPT(paragraph)
-  console.log("response for runChatGPT:\n",res)
-}
 
 const leverUrls=[
   //"https://jobs.lever.co/scratchfinancial/1e4d2c34-1a0c-4731-b336-17bdafe30b09",
@@ -110,8 +102,8 @@ function App() {
   const [url, setUrl] = useState<string>(leverUrls[0]);
   const [salary, setSalary] = useState<string>('Yet to be scraped');
   const [title, setTitle] = useState<string>('Yet to be scraped');
-  const [jobDetails,setJobDetails]=useState<JobDetails>({salary:"",experience:"",techStack:[]})
-  const [experience, setExperience] = useState<string>('Yet to be scraped');
+
+
   const [showWebView,setShowWebView]=useState(false)
   const [techStackText, setTechStackText] = useState<string>('Yet to be scraped');
   const [contentText, setContentText] = useState<string>('Yet to be scraped');
@@ -143,11 +135,6 @@ function App() {
       value:url,
       anchor:true
     },
-    {
-      name:'Years of Experience',
-      value:experience,
-      anchor:false
-    },
   ]
 
   const webviewScrapeContent = () => {
@@ -162,20 +149,15 @@ function App() {
       webviewRef.current.executeJavaScript(scrapeFunctionString)
         .then(result => {
           setContentText(result)
-          
           return result
         })
-        .then(content=>{
-          console.log("content:",content)
-          try{
-            console.log("running testGPTScrape...")
-            testGPTScrape(content)
-            
-          }catch(e){
-            console.log("failed...\n",e)
-          }
-          return
-        }).then(()=>console.log("success"))
+        .then(content=>searchForKeywords(content))
+        .then(keywords=>{
+          console.log("keywords:",keywords)
+          let words=keywords.join(", ")
+          setTechStackText(words.substring(0,words.length-1))
+        })
+
         .catch(err => setContentText(err));
 
       webviewRef.current.executeJavaScript(scrapeFunctionJobTitleString)
