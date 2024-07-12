@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useState, useRef } from 'react'
  
 import { searchForKeywords, setWindowTitle } from './IPC/IPCMessages';
 
@@ -108,11 +108,16 @@ function App() {
   const [techStackText, setTechStackText] = useState<string>('Yet to be scraped');
   const [contentText, setContentText] = useState<string>('Yet to be scraped');
   const webviewRef = useRef<Electron.WebviewTag>(null);
-  const handleSetUrl=(url:string)=>setUrl(url)
+  const handleSetUrl=(url:string)=>{
+    setShowWebView(false)
+    setTechStackText('Yet to be scraped')
+    setContentText('Yet to be scraped')
+    setSalary('Yet to be scraped')
+    setTitle('Yet to be scraped')
+    setUrl(url)
+  }
   const handleShowWebView=()=>setShowWebView(!showWebView)
   const getCompanyFromUrl=(url:string)=>url.replace("https://","").split("/")[1]
-  
-  useEffect(()=>setContentText('Yet to be scraped'),[url])
 
   const infoContainerInfo=[
     {
@@ -155,7 +160,7 @@ function App() {
         .then(keywords=>{
           console.log("keywords:",keywords)
           let words=keywords.join(", ")
-          setTechStackText(words.substring(0,words.length-1))
+          setTechStackText(words)
         })
 
         .catch(err => setContentText(err));
